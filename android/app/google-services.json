@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "961495830989",
+    "firebase_url": "https://classapp-3ebe1-default-rtdb.firebaseio.com",
+    "project_id": "classapp-3ebe1",
+    "storage_bucket": "classapp-3ebe1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:961495830989:android:e46e3924fa8a70eb17f484",
+        "android_client_info": {
+          "package_name": "com.example.study_go"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCK_TvJqc7BmCOhnNUeQMr-xl66OEplkQM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
