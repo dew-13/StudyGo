@@ -1,16 +1,20 @@
 # study_go
 
-A new Flutter project.
+A Class Management Mobile App designed using Flutter and Firebase.
 
-## Getting Started
+Key Features
+User levels : Admin, Teacher, Student/Parent
 
-This project is a starting point for a Flutter application.
+Admin 
+  - Add, Delete, Manage Students, Teachers and Courses
+  - Make Paymenets
+  - View Payments history, Payment summary for each month
 
-A few resources to get you started if this is your first Flutter project:
+Teacher
+  - View and manage courses assigned by the Admin
+  - Mark Attendance in each course
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Student
+  - View their assigned courses
+  - View attendance history
+  - Receive sms to the registered telephone number after payment
