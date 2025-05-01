@@ -3,7 +3,9 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:study_go/admin/list_courses.dart';
 import 'package:study_go/admin/list_students.dart';
 import 'package:study_go/admin/list_teachers.dart';
-import 'package:study_go/admin/payment.dart';
+import 'package:study_go/admin/payment_reminder.dart';
+import 'package:study_go/admin/admin_welcome_screen.dart';
+import 'package:study_go/admin/report.dart';
 
 class AdminPanel extends StatefulWidget {
   const AdminPanel({super.key});
@@ -51,8 +53,10 @@ class AdminPanelState extends State<AdminPanel> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 7, 2, 87),
-        title: const Text('Admin Dashboard', style: TextStyle(color: Colors.white)),
-        
+        title: const Text(
+          'Admin Dashboard',
+          style: TextStyle(color: Colors.white),
+        ),
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -65,11 +69,29 @@ class AdminPanelState extends State<AdminPanel> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: <Widget>[
-                      Expanded(child: _buildStatCard('Students', studentCount.toString(), Icons.person)),
+                      Expanded(
+                        child: _buildStatCard(
+                          'Students',
+                          studentCount.toString(),
+                          Icons.person,
+                        ),
+                      ),
                       const SizedBox(width: 10),
-                      Expanded(child: _buildStatCard('Classes', courseCount.toString(), Icons.book)),
+                      Expanded(
+                        child: _buildStatCard(
+                          'Classes',
+                          courseCount.toString(),
+                          Icons.book,
+                        ),
+                      ),
                       const SizedBox(width: 10),
-                      Expanded(child: _buildStatCard('Teachers', teacherCount.toString(), Icons.school)),
+                      Expanded(
+                        child: _buildStatCard(
+                          'Teachers',
+                          teacherCount.toString(),
+                          Icons.school,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -83,8 +105,8 @@ class AdminPanelState extends State<AdminPanel> {
                   _buildManageOption('Manage Courses', () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => CourseList()
-                     ) );
+                      MaterialPageRoute(builder: (context) => CourseList()),
+                    );
                   }),
                   const SizedBox(height: 20),
                   _buildManageOption('Manage Teachers', () {
@@ -94,12 +116,64 @@ class AdminPanelState extends State<AdminPanel> {
                     );
                   }),
                   const SizedBox(height: 20),
-                  _buildManageOption('Make Payment', () {
+                  _buildManageOption('Pending Payments', () {
+                    if (courseCount > 0) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PaymentRemindersScreen(),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('No courses available')),
+                      );
+                    }
+                  }),
+                  const SizedBox(height: 20),
+                  _buildManageOption('Payment Reports', () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => PaymentsPage()),
+                      MaterialPageRoute(builder: (context) => PaymentReport()),
                     );
                   }),
+                  const SizedBox(height: 20),
+                  // Log out button
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AdminWelcomeScreen(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(
+                          255,
+                          169,
+                          168,
+                          177,
+                        ), // Button color
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 40,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Log Out',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -119,7 +193,10 @@ class AdminPanelState extends State<AdminPanel> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Text(title, style: const TextStyle(color: Colors.black, fontSize: 16)),
+            Text(
+              title,
+              style: const TextStyle(color: Colors.black, fontSize: 16),
+            ),
             const SizedBox(height: 8),
             Icon(icon, size: 40, color: Colors.blue),
             const SizedBox(height: 8),

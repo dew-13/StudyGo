@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:study_go/logins/custom_scaffold.dart';
-import 'package:study_go/logins/register_screen.dart';
+import 'package:study_go/admin/register_screen.dart';
+import 'package:study_go/admin/admin_welcome_screen.dart';
+import 'package:study_go/admin/reset_password.dart';
 import '../theme/theme.dart';
 import 'package:study_go/admin/admin_panel.dart'; // Import the admin panel screen
+import 'package:shared_preferences/shared_preferences.dart'; // NEW import
 
 class AdminLogInScreen extends StatefulWidget {
   const AdminLogInScreen({super.key});
@@ -20,6 +23,40 @@ class _AdminLogInScreenState extends State<AdminLogInScreen> {
 
   final DatabaseReference _databaseRef = FirebaseDatabase.instance.ref().child('admins');
 
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedCredentials(); // Load saved credentials when screen loads
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final savedUsername = prefs.getString('admin_username');
+    final savedPassword = prefs.getString('admin_password');
+    final remember = prefs.getBool('remember_admin') ?? false;
+
+    if (remember && savedUsername != null && savedPassword != null) {
+      setState(() {
+        usernameController.text = savedUsername;
+        passwordController.text = savedPassword;
+        rememberPassword = true;
+      });
+    }
+  }
+
+  Future<void> _saveCredentials() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (rememberPassword) {
+      await prefs.setString('admin_username', usernameController.text.trim());
+      await prefs.setString('admin_password', passwordController.text.trim());
+      await prefs.setBool('remember_admin', true);
+    } else {
+      await prefs.remove('admin_username');
+      await prefs.remove('admin_password');
+      await prefs.setBool('remember_admin', false);
+    }
+  }
+
   // Function to validate admin credentials
   Future<void> _validateAdmin() async {
     if (_formSignInKey.currentState!.validate()) {
@@ -28,15 +65,11 @@ class _AdminLogInScreenState extends State<AdminLogInScreen> {
 
       try {
         // Fetch admin data from Firebase Realtime Database
-        final snapshot = await _databaseRef
-            .orderByChild('username')
-            .equalTo(username)
-            .once();
+        final snapshot = await _databaseRef.orderByChild('username').equalTo(username).once();
 
         if (snapshot.snapshot.value != null) {
           // Extract admin data
-          final Map<dynamic, dynamic> admins =
-              snapshot.snapshot.value as Map<dynamic, dynamic>;
+          final Map<dynamic, dynamic> admins = snapshot.snapshot.value as Map<dynamic, dynamic>;
           bool isAuthenticated = false;
 
           admins.forEach((key, value) {
@@ -46,35 +79,28 @@ class _AdminLogInScreenState extends State<AdminLogInScreen> {
           });
 
           if (isAuthenticated) {
+            await _saveCredentials(); // Save credentials if authenticated
             // Navigate to AdminPanel if credentials are correct
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(
-                builder: (context) => const AdminPanel(),
-              ),
+              MaterialPageRoute(builder: (context) => const AdminPanel()),
             );
           } else {
             // Show error if credentials are incorrect
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Invalid username or password'),
-              ),
+              const SnackBar(content: Text('Invalid username or password')),
             );
           }
         } else {
           // Show error if username is not found
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Admin not found'),
-            ),
+            const SnackBar(content: Text('Admin not found')),
           );
         }
       } catch (e) {
         // Show error if Firebase operation fails
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-          ),
+          SnackBar(content: Text('Error: $e')),
         );
       }
     }
@@ -171,6 +197,14 @@ class _AdminLogInScreenState extends State<AdminLogInScreen> {
                             ],
                           ),
                           GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (e) => const ResetPasswordScreen(),
+                                ),
+                              );
+                            },
                             child: Text(
                               'Forgot password?',
                               style: TextStyle(
@@ -217,6 +251,23 @@ class _AdminLogInScreenState extends State<AdminLogInScreen> {
                         ],
                       ),
                       const SizedBox(height: 20.0),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (e) => const AdminWelcomeScreen(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          'Back to Home',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: lightColorScheme.primary,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),

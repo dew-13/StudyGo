@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:study_go/student/student_profile.dart';
-import 'package:study_go/teacher/teacher_panel.dart';
 import 'package:study_go/logins/custom_scaffold.dart';
+import 'package:study_go/teacher/teacher_panel.dart';
 import '../theme/theme.dart';
 import 'package:study_go/logins/common_otp.dart';
+import 'package:study_go/logins/welcome_screen.dart';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 
 class LogInScreen extends StatefulWidget {
   const LogInScreen({super.key});
@@ -20,43 +24,99 @@ class _LogInScreenState extends State<LogInScreen> {
   final TextEditingController passwordController = TextEditingController();
   final DatabaseReference dbRef = FirebaseDatabase.instance.ref();
 
+  @override
+  void initState() {
+    super.initState();
+    loadUserCredentials();
+  }
+
+  Future<void> loadUserCredentials() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool remember = prefs.getBool('remember_me') ?? false;
+    if (remember) {
+      String? savedPhone = prefs.getString('phone');
+      String? savedPassword = prefs.getString('password');
+      setState(() {
+        rememberPassword = remember;
+        phoneController.text = savedPhone ?? '';
+        passwordController.text = savedPassword ?? '';
+      });
+    }
+  }
+
+  Future<void> saveUserCredentials() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (rememberPassword) {
+      await prefs.setBool('remember_me', true);
+      await prefs.setString('phone', phoneController.text.trim());
+      await prefs.setString('password', passwordController.text);
+    } else {
+      await prefs.setBool('remember_me', false);
+      await prefs.remove('phone');
+      await prefs.remove('password');
+    }
+  }
+
   void loginUser() async {
     if (_formSignInKey.currentState!.validate()) {
+      await saveUserCredentials();
       String phoneNumber = phoneController.text.trim();
+      String inputPassword = passwordController.text.trim();
+      String hashedInputPassword = sha256.convert(utf8.encode(inputPassword)).toString();
 
-      // Check in Student table
-      DatabaseEvent studentSnapshot = await dbRef.child('students')
+      // Check Student Table
+      DatabaseEvent studentSnapshot = await dbRef
+          .child('students')
           .orderByChild('contact')
           .equalTo(phoneNumber)
           .once();
 
       if (studentSnapshot.snapshot.value != null) {
-        // Phone found in student table
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => StudentProfile()),
-        );
-        return;
+        final data = Map<String, dynamic>.from(
+            studentSnapshot.snapshot.value as Map<dynamic, dynamic>);
+        final studentEntry = data.entries.first.value as Map<dynamic, dynamic>;
+        if (studentEntry['password'] == hashedInputPassword) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => StudentPanel(
+                contact: phoneNumber,
+                password: inputPassword,
+              ),
+            ),
+          );
+          return;
+        }
       }
 
-      // Check in Teacher table
-      DatabaseEvent teacherSnapshot = await dbRef.child('teachers')
+      // Check Teacher Table
+      DatabaseEvent teacherSnapshot = await dbRef
+          .child('teachers')
           .orderByChild('contact')
           .equalTo(phoneNumber)
           .once();
 
       if (teacherSnapshot.snapshot.value != null) {
-        // Phone found in teacher table
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ProfilePage()),
-        );
-        return;
+        final data = Map<String, dynamic>.from(
+            teacherSnapshot.snapshot.value as Map<dynamic, dynamic>);
+        final teacherEntry = data.entries.first.value as Map<dynamic, dynamic>;
+        if (teacherEntry['password'] == hashedInputPassword) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TeacherPanel(
+                contact: phoneNumber,
+                password: inputPassword,
+              ),
+            ),
+          );
+          return;
+        }
       }
 
-      // Phone not found in any table
+      // Either phone not found or password incorrect
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Phone number not registered!')),
+        const SnackBar(content: Text('Invalid phone number or password')),
       );
     }
   }
@@ -151,15 +211,7 @@ class _LogInScreenState extends State<LogInScreen> {
                               ),
                             ],
                           ),
-                          GestureDetector(
-                            child: Text(
-                              'Forgot password?',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: lightColorScheme.primary,
-                              ),
-                            ),
-                          ),
+                          
                         ],
                       ),
                       const SizedBox(height: 25.0),
@@ -198,6 +250,38 @@ class _LogInScreenState extends State<LogInScreen> {
                         ],
                       ),
                       const SizedBox(height: 20.0),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (e) => const WelcomeScreen(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          'Back to Home',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: lightColorScheme.primary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 80.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              
+                              const Text(
+                                'Forgot password? ',
+                                style: TextStyle(color: Colors.black45),
+                              ),
+                              const Text(
+                                ' Please Contact Admin.',
+                                style: TextStyle(color: Colors.black45),
+                              ),
+                            ],
+                          ),
                     ],
                   ),
                 ),

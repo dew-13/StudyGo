@@ -1,12 +1,10 @@
-
-import 'package:study_go/admin/admin_welcome_screen.dart';
+import 'package:study_go/admin/admin_login.dart';
 import 'package:study_go/logins/custom_scaffold.dart';
 import 'package:flutter/material.dart';
-import 'package:study_go/logins/login_screen.dart';
+import 'package:study_go/logins/welcome_screen.dart';
 
-
-class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({super.key});
+class AdminWelcomeScreen extends StatelessWidget {
+  const AdminWelcomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +33,7 @@ class WelcomeScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => AdminWelcomeScreen(),
+                            builder: (context) => WelcomeScreen(),
                           ),
                         );
                       },
@@ -58,45 +56,36 @@ class WelcomeScreen extends StatelessWidget {
                 ),
               ),
             ),
-          ),         Flexible(
+          ),
+          Flexible(
             flex: 1,
             child: Align(
               alignment: Alignment.bottomCenter,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                 
-                  // Teacher Icon
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) =>  LogInScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const AdminLogInScreen(),
+                        ),
                       );
                     },
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.school, size: 50, color: Colors.white),
+                        Icon(
+                          Icons.admin_panel_settings,
+                          size: 50,
+                          color: Colors.white,
+                        ),
                         SizedBox(height: 8),
-                        Text('Teacher', style: TextStyle(color: Colors.white, fontSize: 16)),
-                      ],
-                    ),
-                  ),
-                  // Student Icon
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const LogInScreen()),
-                      );
-                    },
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.person, size: 50, color: Colors.white),
-                        SizedBox(height: 8),
-                        Text('Student', style: TextStyle(color: Colors.white, fontSize: 16)),
+                        Text(
+                          'Admin',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
                       ],
                     ),
                   ),

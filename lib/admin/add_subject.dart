@@ -21,7 +21,7 @@ class AddSubjectState extends State<AddSubject> {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
 
   final List<String> subjects = [
-    "Science", "Mathematics", "Art", "Music", "Drama", "History", "Sinhala", "English"
+    "Science", "Mathematics", "Art", "Music", "Drama", "History", "Sinhala", "English", "Computer Science"
   ];
 
   final List<String> grades = [

@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart'; 
+import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:crypto/crypto.dart';
-import 'package:study_go/admin/list_students.dart';
-import 'dart:convert'; // for the utf8.encode method
+import 'dart:convert'; // for utf8.encode and jsonEncode
+import 'package:http/http.dart' as http;
+import 'package:study_go/admin/list_students.dart'; // your existing page
 
 class AddStudent extends StatefulWidget {
   const AddStudent({super.key});
@@ -29,9 +30,44 @@ class _AddStudentState extends State<AddStudent> {
     return digest.toString();
   }
 
+  // Function to send SMS via Infobip
+  Future<void> sendSms(String phoneNumber, String password) async {
+    var url = Uri.parse('https://api.infobip.com/sms/2/text/advanced');
+
+    var headers = {
+      'Authorization':
+          'App bb38d88e96213e9387b78515175e8287-f75c5f99-53a3-4a41-8068-a7734759f19f',
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    var body = jsonEncode({
+      "messages": [
+        {
+          "destinations": [
+            {"to": phoneNumber}
+          ],
+          "from": "+44 7491 163443", // your approved Infobip sender ID
+          "text": "Welcome to StudyGo! Your password is: $password"
+        }
+      ]
+    });
+
+    var response = await http.post(url, headers: headers, body: body);
+
+    if (response.statusCode == 200) {
+      // ignore: avoid_print
+      print('SMS sent successfully!');
+    } else {
+      // ignore: avoid_print
+      print('Failed to send SMS: ${response.body}');
+    }
+  }
+
   void _saveStudent() {
     if (_formKey.currentState!.validate()) {
-      final hashedPassword = _hashPassword(_passwordController.text.trim());
+      final rawPassword = _passwordController.text.trim();
+      final hashedPassword = _hashPassword(rawPassword);
 
       final studentData = {
         "name": _nameController.text.trim(),
@@ -43,6 +79,8 @@ class _AddStudentState extends State<AddStudent> {
       };
 
       _database.push().set(studentData).then((_) {
+        sendSms(_contactController.text.trim(), rawPassword);
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Student added successfully!")),
@@ -70,7 +108,7 @@ class _AddStudentState extends State<AddStudent> {
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 7, 2, 87),
         title: const Text(
-          'Add New Student Registration',
+          'Add New Student',
           style: TextStyle(color: Colors.white),
         ),
         leading: IconButton(
@@ -78,7 +116,7 @@ class _AddStudentState extends State<AddStudent> {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => StudentList()),
+              MaterialPageRoute(builder: (context) => const StudentList()),
             );
           },
         ),
@@ -97,7 +135,8 @@ class _AddStudentState extends State<AddStudent> {
                 _buildTextField(_schoolController, "School Name"),
                 _buildGradeDropdown(),
                 _buildTextField(_birthYearController, "Birth Year"),
-                _buildTextField(_passwordController, "Password", isPassword: true),
+                _buildTextField(_passwordController, "Password",
+                    isPassword: true),
                 _buildTextField(_contactController, "Contact Number"),
                 const SizedBox(height: 24),
                 SizedBox(
@@ -126,7 +165,8 @@ class _AddStudentState extends State<AddStudent> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, {bool isPassword = false}) {
+  Widget _buildTextField(TextEditingController controller, String label,
+      {bool isPassword = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
@@ -170,7 +210,7 @@ class _AddStudentState extends State<AddStudent> {
           ),
         ),
         items: [
-          for (int i = 6; i <= 11; i++)
+          for (int i = 6; i <= 12; i++)
             DropdownMenuItem(value: "Grade $i", child: Text("Grade $i")),
         ],
         onChanged: (value) {
